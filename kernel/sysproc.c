@@ -6,6 +6,10 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "vm.h"
+#include "sysinfo.h"
+
+extern char *syscall_names[];
+extern int target_trace_id;
 
 uint64
 sys_exit(void)
@@ -111,7 +115,40 @@ sys_uptime(void)
 uint64
 sys_trace(void)
 {
-  // Aquí desarrollaremos la lógica para extraer el argumento (nombre)
-  // e interceptar la syscall más adelante.
+  char syscall_name[32];
+
+  if(argstr(0, syscall_name, 32) < 0) {
+    return -1;
+  }
+
+  // Buscar el ID numérico iterando sobre el arreglo de nombres
+  // Hay un máximo de 23 syscalls registradas actualmente
+  for(int i = 1; i <= 23; i++) { 
+    if(syscall_names[i] != 0 && strncmp(syscall_name, syscall_names[i], 32) == 0) {
+      target_trace_id = i; 
+      return 0; 
+    }
+  }
+
+  return -1;
+}
+
+uint64
+sys_sysinfo(void)
+{
+  struct sysinfo info;
+  uint64 addr;
+
+  // Extraer la dirección de memoria que nos manda el usuario (sin condicional if)
+  argaddr(0, &addr);
+
+  // Usar tus funciones para llenar la estructura con los datos
+  collect_mem_info(&info.free_memory_mb, &info.used_pages, &info.available_pages);
+  info.runnable_procs = count_runnable_procs();
+
+  // Copiar la estructura llena hacia el programa de usuario de forma segura
+  if(copyout(myproc()->pagetable, addr, (char *)&info, sizeof(info)) < 0)
+    return -1;
+
   return 0;
-} 
+}
