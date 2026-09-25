@@ -122,8 +122,8 @@ sys_trace(void)
   }
 
   // Buscar el ID numérico iterando sobre el arreglo de nombres
-  // Hay un máximo de 23 syscalls registradas actualmente
-  for(int i = 1; i <= 23; i++) { 
+  // Hay un máximo de 24 syscalls registradas actualmente
+  for(int i = 1; i <= 24; i++) { 
     if(syscall_names[i] != 0 && strncmp(syscall_name, syscall_names[i], 32) == 0) {
       target_trace_id = i; 
       return 0; 
